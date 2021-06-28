@@ -1,5 +1,7 @@
 package microservices.book.gamification.service;
 import lombok.extern.slf4j.Slf4j;
+import microservices.book.gamification.client.MultiplicationResultAttemptClient;
+import microservices.book.gamification.client.dto.MultiplicationResultAttempt;
 import microservices.book.gamification.domain.*;
 import microservices.book.gamification.repository.BadgeCardRepository;
 import microservices.book.gamification.repository.ScoreCardRepository;
@@ -13,13 +15,16 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 class GameServiceImpl implements GameService {
+	public static final int LUCKY_NUMBER = 42;
 	private ScoreCardRepository scoreCardRepository;
 	private BadgeCardRepository badgeCardRepository;
+	private MultiplicationResultAttemptClient attemptClient;
 	
 	GameServiceImpl(ScoreCardRepository scoreCardRepository,
-					BadgeCardRepository badgeCardRepository){
+					BadgeCardRepository badgeCardRepository,  MultiplicationResultAttemptClient attemptClient){
 	this.scoreCardRepository = scoreCardRepository;
 	this.badgeCardRepository = badgeCardRepository;
+	this.attemptClient = attemptClient;
 	}
 	
 	@Override
@@ -57,6 +62,15 @@ class GameServiceImpl implements GameService {
 		if(scoreCardList.size() == 1 && !containsBadge(badgeCardList, Badge.FIRST_WON)) {
 			BadgeCard firstWonBadge = giveBadgeToUser(Badge.FIRST_WON, userId);
 			badgeCards.add(firstWonBadge);
+		}
+		
+		// Lucky number badge
+		MultiplicationResultAttempt attempt = attemptClient.retrieveMultiplicationResultAttemptbyId(attemptId);
+		if(!containsBadge(badgeCardList, Badge.LUCKY_NUMBER) && (LUCKY_NUMBER == attempt.getMultiplicationFactorA() 
+				|| LUCKY_NUMBER == attempt.getMultiplicationFactorB())) {
+			BadgeCard luckyNumberBadge = giveBadgeToUser(Badge.LUCKY_NUMBER, userId);
+			badgeCards.add(luckyNumberBadge);
+			
 		}
 		return badgeCards;
 	}
