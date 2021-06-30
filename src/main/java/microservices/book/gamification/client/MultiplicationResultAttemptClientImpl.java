@@ -4,24 +4,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 /**
 * This implementation of MultiplicationResultAttemptClient interface connects to
 * the Multiplication microservice via REST.
 */
 @Component
 class MultiplicationResultAttemptClientImpl implements MultiplicationResultAttemptClient {
-	private final RestTemplate restTemplate;
-	private final String multiplicationHost;
+    private final RestTemplate restTemplate;
+    private final String multiplicationHost;
 
-	@Autowired
-	public MultiplicationResultAttemptClientImpl(final RestTemplate restTemplate, @Value("${multiplicationHost}") final String multiplicationHost) {
-		this.restTemplate = restTemplate;
-		this.multiplicationHost = multiplicationHost;
-	}
+    @Autowired
+    public MultiplicationResultAttemptClientImpl(final RestTemplate restTemplate, @Value("${multiplicationHost}") final String multiplicationHost) {
+        this.restTemplate = restTemplate;
+        this.multiplicationHost = multiplicationHost;
+    }
 
-	@Override
-	public MultiplicationResultAttempt retrieveMultiplicationResultAttemptbyId(final Long multiplicationResultAttemptId) {
-		return restTemplate.getForObject(multiplicationHost + "/results/" + multiplicationResultAttemptId, MultiplicationResultAttempt.class);
-	}
+//    @HystrixCommand(fallbackMethod = "defaultResult")
+    @CircuitBreaker(name="fallback",fallbackMethod="defaultResult")
+    @Override
+    public MultiplicationResultAttempt retrieveMultiplicationResultAttemptbyId(final Long multiplicationResultAttemptId) {
+        return restTemplate.getForObject(multiplicationHost + "/results/" + multiplicationResultAttemptId, MultiplicationResultAttempt.class);
+    }
+    
+    private MultiplicationResultAttempt defaultResult(final Long multiplicationResultAttemptId, Exception ex) {
+        System.out.println("-----------------------------Executing defaultResult() method-----------------------------");
+        return new MultiplicationResultAttempt("fakeAlias",10, 10, 100, true);
+    }
 }
-
