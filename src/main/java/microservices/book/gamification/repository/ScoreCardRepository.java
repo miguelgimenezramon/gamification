@@ -35,4 +35,6 @@ CrudRepository<ScoreCard, Long> {
 	* @return a list containing all the ScoreCards for the given user, sorted by most recent.
 	*/
 	List<ScoreCard> findByUserIdOrderByScoreTimestampDesc(final Long userId);
+	
+	ScoreCard findByAttemptId(final Long attempId);
 }

@@ -41,6 +41,12 @@ class GameServiceImpl implements GameService {
 		return GameStats.emptyStats(userId);
 	}
 	
+	@Override
+    public ScoreCard getScoreForAttempt(final Long attemptId) {
+        return scoreCardRepository.findByAttemptId(attemptId);
+    }
+
+	
 	/**
 	* Checks the total score and the different score cards obtained
 	* to give new badges in case their conditions are met.
